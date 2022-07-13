@@ -71,12 +71,12 @@ int main()
 	for (int i = 0; i < SIZE; i++)
 	{
 		histo[buffer[i]]--;
-		for (int i = 0; i < 256; i++)
+	}
+	for (int i = 0; i < 256; i++)
+	{
+		if (histo[i] != 0)
 		{
-			if (histo[i] != 0)
-			{
-				printf("Failure at %d!\n", i);
-			}
+			printf("Failure at %d!\n", i);
 		}
 	}
 

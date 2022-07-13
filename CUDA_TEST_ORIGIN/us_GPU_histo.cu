@@ -12,11 +12,13 @@
 
 __global__ void histo_kernel(unsigned char* buffer, long size, unsigned int* histo)
 {
-	int i = threadIdx.x + blockIdx.x * blockDim.x;
-	int stride = blockDim.x * gridDim.x;
+	int i = threadIdx.x + blockIdx.x * blockDim.x; //시작 오프셋
+	int stride = blockDim.x * gridDim.x; //사용할 간격
 	while (i < size)
 	{
-		atomicAdd(&(histo[buffer[i]]), 1);
+		atomicAdd(&(histo[buffer[i]]), 1); //원자적 절차 수행 
+		//(이 연산을 수행하는 동안 하드웨어는 다른 스레드가 주소의 값을 읽거나 쓸 수 없도록 보장)
+
 		i += stride;
 	}
 }
@@ -59,7 +61,7 @@ int main()
 	cudaEventElapsedTime(&elapsedTime, start, stop);
 	printf("Time to generate: %3.lf ms\n", elapsedTime);
 
-	//모든 저장소에 대한 히스토그램 합계가 우리가 예상한 값인지 확인해준다.
+	//모든 저장소에 대한 히스토그램 합계가 우리가 예상한 값인지 확인.
 	long histoCount = 0;
 	for (int i = 0; i < 256; i++)
 	{
@@ -68,16 +70,17 @@ int main()
 	printf("Histogram Sum: %ld\n", histoCount);
 	
 
-	//CPU를 이용해서 동일한 횟수인지 확인
+	//CPU를 이용해서 동일한 횟수인지 확인.
 	for (int i = 0; i < SIZE; i++)
 	{
 		histo[buffer[i]]--;
-		for (int i = 0; i < 256; i++)
+		
+	}
+	for (int i = 0; i < 256; i++)
+	{
+		if (histo[i] != 0)
 		{
-			if (histo[i] != 0)
-			{
-				printf("Failure at %d!\n", i);
-			}
+			printf("Failure at %d!\n", i);
 		}
 	}
 
