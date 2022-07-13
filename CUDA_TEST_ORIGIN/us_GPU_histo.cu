@@ -31,6 +31,7 @@ int main()
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
 	cudaEventRecord(start, 0);
+	//test
 
 	//GPU메모리 설정
 	unsigned char* dev_buffer; //buffer에 대한 GPU메모리 할당
