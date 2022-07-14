@@ -12,20 +12,26 @@
 
 __global__ void histo_kernel(unsigned char* buffer, long size, unsigned int* histo)
 {
-	__shared__ unsigned int temp[256];
-	temp[threadIdx.x] = 0;
-	__syncthreads();
+	__shared__ unsigned int temp[256]; //공유메모리 버퍼 할당
+	temp[threadIdx.x] = 0; // 0으로 초기화
+	__syncthreads(); // 모든 스레드의 기록 작업을 끝내고 다음 과정으로 넘어가도록 해줌
 
 	int i = threadIdx.x + blockIdx.x * blockDim.x;
 	int offset = blockDim.x * gridDim.x;
 	while (i < size)
 	{
-		atomicAdd(&temp[buffer[i]], 1);
+		atomicAdd(&temp[buffer[i]], 1); //전역 메모리 histo 대신 공유 메모리 temp를 사용
 		i += offset;
 	}
-
 	__syncthreads();
-	atomicAdd(&(histo[threadIdx.x]), temp[threadIdx.x]);
+
+	atomicAdd(&(histo[threadIdx.x]), temp[threadIdx.x]); //각 블록의 임시 히스토그램(temp)들을 전역 버퍼(histo)로 합쳐줌
+	//스레드에서의 개수는 어떠한 수로도 바뀔 수 있으므로, 최종 히스토그램을 위한 모든 블록의 히스토그램들의 합은
+	//각 블록의 히스토그램 각각의 항목을 최종의 히스토그램의 각각의 항목에 합한것과 같다
+	//그러므로 원자적으로 수행되어야 함
+	//256개의 스레드를 사용하기로 했고, 256개의 히스토그램 저장소들(temp, histo)을 가졌으므로
+	//각 스레드는 하나의 단일 저장소를 최종의 히스토그램에 원자적으로 더해줌 ->원자적 합산이 제공되므로 결과값은 항상 동일
+
 }
 
 int main()
